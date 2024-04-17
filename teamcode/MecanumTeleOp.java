@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.Range;
 
 @TeleOp
 public class MecanumTeleOp extends OpMode {
@@ -12,10 +13,8 @@ public class MecanumTeleOp extends OpMode {
     //Variables
     double ticks = 288;
     double newTarget;
-    double liftSpeed = 0.8;
+    double liftSpeed = 0.7;
     double speedMultiplier = 0.7;
-
-    double liftWatchDog = 10;
     
     boolean manualMode;
 
@@ -68,6 +67,7 @@ public class MecanumTeleOp extends OpMode {
         liftRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         angleServo.setPosition(0.8);
+        airplane.setPosition(0.85);
         manualMode = false;
     }
         @Override
@@ -76,18 +76,9 @@ public class MecanumTeleOp extends OpMode {
             double x = -gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
             double rx = gamepad1.right_stick_x;
 
-            if(gamepad1.y){
-                if (speed == 0.7){
-                    speed = 0.3;
-                }else{
-                    speed = 0.7;
-                }
-
-            }
+            speed = Range.clip(gamepad1.right_trigger*0.8,0.3,0.8);
 
 
-//            if (!gamepad1.right_bumper)
-//                speed = gamepad1.right_trigger;
             double balance = 0.00; //C.G corrector
             // Denominator is the largest motor power (absolute value) or 1
             // This ensures all the powers maintain the same ratio,
@@ -104,52 +95,52 @@ public class MecanumTeleOp extends OpMode {
             backRightMotor.setPower(backRightPower);
 
             //Pixel Operation:
-            if (gamepad1.right_bumper) {
+            if (gamepad2.right_bumper) {
                 pixelRight.setPosition(0);
                 telemetry.addData("servo", "right");
             } else {
                 pixelRight.setPosition(0.3);
             }
-            if (gamepad1.left_bumper) {
+            if (gamepad2.left_bumper) {
                 pixelLeft.setPosition(0.3);
                 telemetry.addData("servo", "left");
             } else {
                 pixelLeft.setPosition(0);
             }
             // Airplane Servo
-            if (gamepad1.a) {
+            if (gamepad2.a) {
                 airplane.setPosition(1);
             } else {
-                airplane.setPosition(0.8);
+                airplane.setPosition(0.85);
             }
 
             //Lift Modes
-            if (gamepad1.dpad_up) { // Controls Pixel arm Position - UP
+            if (gamepad2.dpad_up) { // Controls Pixel arm Position - UP
                 run_encoder(0.5, liftSpeed, liftRight);
                 run_encoder(0.5, liftSpeed, liftLeft);
                 angleServo.setPosition(0.45);//armServo position - UP
 
             }
-            if (gamepad1.dpad_down) { // Controls Pixel arm Position - UP
-                run_encoder(0.02, liftSpeed, liftRight);
-                run_encoder(0.02, liftSpeed, liftLeft);
-                angleServo.setPosition(0.2);//armServo position - DOWN
+            if (gamepad2.dpad_down) { // Controls Pixel arm Position - UP
+                run_encoder(0.15, liftSpeed*0.7, liftRight);
+                run_encoder(0.15, liftSpeed*0.7, liftLeft);
+                angleServo.setPosition(0);//armServo position - DOWN
             }
-            if (gamepad1.dpad_right) { // Prepare for lift
+            if (gamepad2.dpad_right) { // Prepare for lift
                 run_encoder(1.2, 1, liftLeft);
                 run_encoder(1.2, 1, liftRight);
                 angleServo.setPosition(0);
             }
-            if (gamepad1.dpad_left) { // Lift entire Robot
+            if (gamepad2.dpad_left) { // Lift entire Robot
                 run_encoder(0, 1, liftLeft);
                 run_encoder(0, 1, liftRight);
                 angleServo.setPosition(0.3);
             }
 
-            if (gamepad1.b) {
+            if (gamepad2.b) {
                 angleServo.setPosition(angleServo.getPosition() + 0.005);
             }
-            if (gamepad1.x) {
+            if (gamepad2.x) {
                 angleServo.setPosition(angleServo.getPosition() - 0.005);
             }
 
@@ -160,7 +151,7 @@ public class MecanumTeleOp extends OpMode {
 
 
             int version = 2;
-            telemetry.addData("speed: ", speed  )
+            telemetry.addData("speed: ",speed);
             telemetry.addData("version:" ,version );
             telemetry.addData("left front speed:",frontLeftPower);
             telemetry.addData("left back speed:",backLeftPower);
